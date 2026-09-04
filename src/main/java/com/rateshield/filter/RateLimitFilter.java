@@ -34,7 +34,9 @@ public class RateLimitFilter implements Filter {
         String clientIp = httpRequest.getRemoteAddr();
         String requestPath = httpRequest.getRequestURI();
 
-        if (requestPath.startsWith("/h2-console") || 
+        if (requestPath.equals("/") || 
+            requestPath.endsWith(".html") || requestPath.endsWith(".css") || requestPath.endsWith(".js") || requestPath.endsWith(".ico") ||
+            requestPath.startsWith("/h2-console") || 
             requestPath.startsWith("/management/config") || 
             requestPath.startsWith("/management/dashboard")) {
             chain.doFilter(request, response);

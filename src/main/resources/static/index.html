@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RateShield — API Rate Limiter & Gateway Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+    <!-- Navigation Header -->
+    <nav class="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-600/20 text-brand-500 p-2 rounded-lg border border-brand-500/30">
+                    <i class="fa-solid fa-shield-halved text-xl"></i>
+                </div>
+                <span class="font-bold text-xl tracking-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">RateShield</span>
+                <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium">v1.0 Live</span>
+            </div>
+            <div class="flex items-center space-x-4 text-sm">
+                <a href="/h2-console" target="_blank" class="text-slate-400 hover:text-white transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-database text-slate-500"></i> H2 Console
+                </a>
+                <a href="https://github.com/rithika20252024/ratelimiting" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-2">
+                    <i class="fa-brands fa-github"></i> GitHub Repo
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Stat Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Active Rules Card -->
+            <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-6 backdrop-blur">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Active Rate Rules</p>
+                        <h3 id="stat-total-configs" class="text-3xl font-extrabold text-white mt-1">--</h3>
+                    </div>
+                    <div class="bg-indigo-500/10 text-indigo-400 p-3 rounded-xl border border-indigo-500/20">
+                        <i class="fa-solid fa-sliders text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 mt-4"><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Dynamically enforced</p>
+            </div>
+
+            <!-- Violations 24h Card -->
+            <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-6 backdrop-blur">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Violations (24h)</p>
+                        <h3 id="stat-violations-24h" class="text-3xl font-extrabold text-amber-400 mt-1">--</h3>
+                    </div>
+                    <div class="bg-amber-500/10 text-amber-400 p-3 rounded-xl border border-amber-500/20">
+                        <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 mt-4"><i class="fa-solid fa-ban text-rose-400 mr-1"></i> Blocked via HTTP 429</p>
+            </div>
+
+            <!-- System Health Card -->
+            <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-6 backdrop-blur">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Middleware Status</p>
+                        <h3 class="text-3xl font-extrabold text-emerald-400 mt-1">Active</h3>
+                    </div>
+                    <div class="bg-emerald-500/10 text-emerald-400 p-3 rounded-xl border border-emerald-500/20">
+                        <i class="fa-solid fa-heart-pulse text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 mt-4"><i class="fa-solid fa-bolt text-indigo-400 mr-1"></i> Spring Servlet Filter Order(1)</p>
+            </div>
+        </div>
+
+        <!-- Section: Interactive Rate Limit Simulator (STAR FEATURE FOR INTERVIEWERS) -->
+        <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-6 backdrop-blur space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-vial text-brand-400"></i> Interactive Rate Limit Simulator
+                    </h2>
+                    <p class="text-xs text-slate-400">Test live rate limiting rules and observe HTTP 429 responses in real-time.</p>
+                </div>
+                <button onclick="clearConsole()" class="text-xs text-slate-400 hover:text-white bg-slate-800 px-3 py-1.5 rounded border border-slate-700">
+                    <i class="fa-solid fa-eraser mr-1"></i> Clear Log
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Request Controls -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">Target Path</label>
+                        <select id="sim-path" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                            <option value="/api/test">/api/test (Token Bucket - Max 10/60s)</option>
+                            <option value="/api/premium/data">/api/premium/data (Sliding Window - Max 100/60s)</option>
+                            <option value="/api/custom">/api/custom (Unconfigured endpoint)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="sendSingleRequest()" class="flex-1 bg-brand-600 hover:bg-brand-500 text-white font-medium px-4 py-2.5 rounded-lg text-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> Send 1 Request
+                        </button>
+                        <button onclick="runBurstTest()" class="flex-1 bg-rose-600 hover:bg-rose-500 text-white font-medium px-4 py-2.5 rounded-lg text-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-fire"></i> Burst Test (15 Requests)
+                        </button>
+                    </div>
+
+                    <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-800 text-xs text-slate-400 space-y-1">
+                        <p><strong class="text-slate-300">Tip for Interview Demos:</strong></p>
+                        <p>Clicking <strong>Burst Test</strong> fires 15 rapid calls to <code class="text-brand-400">/api/test</code>. The first 10 return <span class="text-emerald-400">200 OK</span>, and subsequent calls immediately return <span class="text-rose-400">429 Too Many Requests</span>!</p>
+                    </div>
+                </div>
+
+                <!-- Real-time Console Log -->
+                <div class="bg-slate-950 border border-slate-800 rounded-lg p-4 font-mono text-xs overflow-hidden flex flex-col h-64">
+                    <div class="text-slate-500 border-b border-slate-800 pb-2 mb-2 flex justify-between">
+                        <span>RESPONSE CONSOLE</span>
+                        <span id="sim-counter" class="text-brand-400 font-bold">0 calls sent</span>
+                    </div>
+                    <div id="sim-log" class="flex-1 overflow-y-auto space-y-1 pr-2 text-slate-300">
+                        <div class="text-slate-600 italic">> Ready. Select an endpoint and click Send or Burst Test.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Active Rules CRUD Management -->
+        <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-6 backdrop-blur space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-brand-400"></i> Rate Limit Configurations
+                    </h2>
+                    <p class="text-xs text-slate-400">Manage API paths, rate limiting algorithms, request thresholds, and time windows.</p>
+                </div>
+                <button onclick="openAddModal()" class="bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> Add New Rule
+                </button>
+            </div>
+
+            <!-- Rules Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-900/60 text-slate-400 uppercase tracking-wider border-b border-slate-700/60">
+                        <tr>
+                            <th class="py-3 px-4">ID</th>
+                            <th class="py-3 px-4">Path Pattern</th>
+                            <th class="py-3 px-4">Algorithm</th>
+                            <th class="py-3 px-4">Max Requests</th>
+                            <th class="py-3 px-4">Window (s)</th>
+                            <th class="py-3 px-4">Status</th>
+                            <th class="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rules-table-body" class="divide-y divide-slate-800">
+                        <tr>
+                            <td colspan="7" class="py-6 text-center text-slate-500">Loading configurations...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Top Violators Analytics -->
+        <div class="bg-slate-800/50 border border-slate-700/60 rounded-xl p-6 backdrop-blur space-y-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-user-shield text-amber-400"></i> Top Rate Limit Violators
+            </h2>
+            <div id="top-violators-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <!-- Dynamically populated -->
+                <div class="bg-slate-900/40 p-4 rounded-lg border border-slate-800 text-slate-500 text-xs text-center col-span-full">
+                    No violations recorded yet. Run a burst test above to generate audit logs!
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal: Add Rule -->
+    <div id="add-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur hidden items-center justify-center z-50 p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-md w-full space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-white text-base">Add Rate Limit Rule</h3>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="add-rule-form" onsubmit="handleAddRule(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">Path Pattern</label>
+                    <input type="text" id="rule-path" required placeholder="/api/v1/**" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-300 mb-1">Algorithm Strategy</label>
+                    <select id="rule-algo" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                        <option value="TOKEN_BUCKET">Token Bucket (Refill rate)</option>
+                        <option value="SLIDING_WINDOW">Sliding Window Log (Deque)</option>
+                        <option value="FIXED_WINDOW">Fixed Window Counter</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">Max Requests</label>
+                        <input type="number" id="rule-max" required value="20" min="1" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-300 mb-1">Window (Seconds)</label>
+                        <input type="number" id="rule-window" required value="60" min="1" class="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-white focus:outline-none focus:border-brand-500">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded hover:bg-slate-700">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-medium rounded">Save Rule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        let totalCallsCount = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchStats();
+            fetchRules();
+        });
+
+        async function fetchStats() {
+            try {
+                const res = await fetch('/management/dashboard/stats');
+                const data = await res.json();
+                document.getElementById('stat-total-configs').innerText = data.totalConfigs || 0;
+                document.getElementById('stat-violations-24h').innerText = data.totalViolationsLast24h || 0;
+
+                const vList = document.getElementById('top-violators-list');
+                if (data.topViolators && data.topViolators.length > 0) {
+                    vList.innerHTML = data.topViolators.map(v => `
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800 flex justify-between items-center text-xs">
+                            <span class="font-mono text-slate-300"><i class="fa-solid fa-laptop text-slate-500 mr-2"></i>${v[0]}</span>
+                            <span class="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded font-bold">${v[1]} violations</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error("Failed to fetch stats:", err);
+            }
+        }
+
+        async function fetchRules() {
+            try {
+                const res = await fetch('/management/config/');
+                const rules = await res.json();
+                const tbody = document.getElementById('rules-table-body');
+                
+                if (rules.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-slate-500">No rate limit rules defined.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = rules.map(r => `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-3 px-4 font-mono text-slate-400">${r.id}</td>
+                        <td class="py-3 px-4 font-mono text-brand-300 font-medium">${r.pathPattern}</td>
+                        <td class="py-3 px-4">
+                            <span class="bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded text-[11px] font-mono">${r.algorithm}</span>
+                        </td>
+                        <td class="py-3 px-4 font-bold text-white">${r.maxRequests}</td>
+                        <td class="py-3 px-4 text-slate-400">${r.windowSeconds}s</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-semibold ${r.enabled ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-700 text-slate-400'}">
+                                ${r.enabled ? 'ENABLED' : 'DISABLED'}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-right space-x-2">
+                            <button onclick="deleteRule(${r.id})" class="text-slate-400 hover:text-rose-400 transition"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error("Failed to fetch rules:", err);
+            }
+        }
+
+        async function sendSingleRequest() {
+            const path = document.getElementById('sim-path').value;
+            totalCallsCount++;
+            document.getElementById('sim-counter').innerText = `${totalCallsCount} calls sent`;
+
+            const startTime = performance.now();
+            try {
+                const res = await fetch(path);
+                const elapsed = (performance.now() - startTime).toFixed(0);
+                const remaining = res.headers.get('X-RateLimit-Remaining') || 'N/A';
+                const algo = res.headers.get('X-RateLimit-Algorithm') || 'N/A';
+                
+                logToConsole(res.status, path, elapsed, remaining, algo);
+            } catch (err) {
+                logToConsole('ERR', path, 0, 'N/A', 'N/A', err.message);
+            }
+            fetchStats();
+        }
+
+        async function runBurstTest() {
+            const path = document.getElementById('sim-path').value;
+            for (let i = 0; i < 15; i++) {
+                await sendSingleRequest();
+                await new Promise(r => setTimeout(r, 80)); // 80ms interval burst
+            }
+        }
+
+        function logToConsole(status, path, ms, remaining, algo, errorMsg = '') {
+            const logDiv = document.getElementById('sim-log');
+            const entry = document.createElement('div');
+            entry.className = 'flex items-center justify-between text-xs py-1 border-b border-slate-900';
+
+            const statusBadge = status === 200 
+                ? `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold">200 OK</span>`
+                : status === 429
+                ? `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded font-bold animate-pulse">429 LIMITED</span>`
+                : `<span class="bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded font-bold">${status}</span>`;
+
+            entry.innerHTML = `
+                <div class="flex items-center gap-2 font-mono">
+                    ${statusBadge}
+                    <span class="text-slate-300">${path}</span>
+                </div>
+                <div class="flex items-center gap-3 text-slate-500 text-[11px]">
+                    <span><i class="fa-solid fa-gauge mr-1 text-slate-600"></i>Rem: <strong class="text-slate-300">${remaining}</strong></span>
+                    <span>${ms}ms</span>
+                </div>
+            `;
+            logDiv.prepend(entry);
+        }
+
+        function clearConsole() {
+            document.getElementById('sim-log').innerHTML = `<div class="text-slate-600 italic">> Console cleared.</div>`;
+        }
+
+        function openAddModal() { document.getElementById('add-modal').classList.remove('hidden'); document.getElementById('add-modal').classList.add('flex'); }
+        function closeAddModal() { document.getElementById('add-modal').classList.add('hidden'); document.getElementById('add-modal').classList.remove('flex'); }
+
+        async function handleAddRule(e) {
+            e.preventDefault();
+            const newRule = {
+                pathPattern: document.getElementById('rule-path').value,
+                algorithm: document.getElementById('rule-algo').value,
+                maxRequests: parseInt(document.getElementById('rule-max').value),
+                windowSeconds: parseInt(document.getElementById('rule-window').value),
+                enabled: true
+            };
+
+            await fetch('/management/config/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newRule)
+            });
+
+            closeAddModal();
+            fetchRules();
+            fetchStats();
+        }
+
+        async function deleteRule(id) {
+            if (confirm("Delete this rate limit rule?")) {
+                await fetch(`/management/config/${id}`, { method: 'DELETE' });
+                fetchRules();
+                fetchStats();
+            }
+        }
+    </script>
+</body>
+</html>
